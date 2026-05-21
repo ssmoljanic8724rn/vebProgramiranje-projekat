@@ -64,6 +64,8 @@ public class PublicNewsRepositoryImpl implements PublicNewsRepository {
         news.setVisitCount(rs.getInt("visit_count"));
         news.setAuthorId(rs.getLong("author_id"));
         news.setCategoryId(rs.getLong("category_id"));
+        news.setTags(findTagsForNews(news.getId()));
+        news.setAuthorName(findAuthorName(news.getAuthorId()));
 
         return news;
     }
@@ -304,5 +306,122 @@ public class PublicNewsRepositoryImpl implements PublicNewsRepository {
         }
 
         return new ReactionStats(0, 0);
+    }
+
+    @Override
+    public List<News> findMostReacted() {
+        List<News> newsList = new ArrayList<>();
+
+        String query =
+                "SELECT n.* FROM news n " +
+                        "LEFT JOIN news_reactions nr ON n.id = nr.news_id " +
+                        "GROUP BY n.id " +
+                        "ORDER BY COUNT(nr.id) DESC, n.created_at DESC " +
+                        "LIMIT 3";
+
+        try (Connection connection = DBUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query);
+             ResultSet rs = statement.executeQuery()) {
+
+            while (rs.next()) {
+                newsList.add(mapResultSetToNews(rs));
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return newsList;
+    }
+
+    @Override
+    public List<News> findRelatedNews(Long newsId) {
+
+        List<News> newsList = new ArrayList<>();
+
+        String query =
+                "SELECT DISTINCT n.* " +
+                        "FROM news n " +
+                        "JOIN news_tags nt ON n.id = nt.news_id " +
+                        "WHERE nt.tag_id IN ( " +
+                        "   SELECT tag_id FROM news_tags WHERE news_id = ? " +
+                        ") " +
+                        "AND n.id != ? " +
+                        "LIMIT 3";
+
+        try (Connection connection = DBUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setLong(1, newsId);
+            statement.setLong(2, newsId);
+
+            try (ResultSet rs = statement.executeQuery()) {
+
+                while (rs.next()) {
+                    newsList.add(mapResultSetToNews(rs));
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return newsList;
+    }
+
+    private List<String> findTagsForNews(Long newsId) {
+        List<String> tags = new ArrayList<>();
+
+        String query =
+                "SELECT t.name FROM tags t " +
+                        "JOIN news_tags nt ON t.id = nt.tag_id " +
+                        "WHERE nt.news_id = ?";
+
+        try (Connection connection = DBUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setLong(1, newsId);
+
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    tags.add(rs.getString("name"));
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return tags;
+    }
+
+    private String findAuthorName(Long authorId) {
+
+        String query =
+                "SELECT first_name, last_name " +
+                        "FROM users " +
+                        "WHERE id = ?";
+
+        try (Connection connection = DBUtil.getConnection();
+             PreparedStatement statement =
+                     connection.prepareStatement(query)) {
+
+            statement.setLong(1, authorId);
+
+            try (ResultSet rs = statement.executeQuery()) {
+
+                if (rs.next()) {
+
+                    return rs.getString("first_name")
+                            + " "
+                            + rs.getString("last_name");
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return null;
     }
 }

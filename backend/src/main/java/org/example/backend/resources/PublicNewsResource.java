@@ -32,22 +32,14 @@ public class PublicNewsResource {
     @Path("/{id}")
     public Response findById(
             @PathParam("id") Long id,
-            @CookieParam("SESSION_ID") String sessionId
+            @HeaderParam("X-Session-Id") String sessionId
     ) {
         try {
-
-            if (sessionId == null || sessionId.trim().isEmpty()) {
-                sessionId = UUID.randomUUID().toString();
-            }
-
             return Response.ok(
                     publicNewsService.findById(id, sessionId)
-            ).cookie(
-                    new NewCookie("SESSION_ID", sessionId)
             ).build();
 
         } catch (RuntimeException e) {
-
             return Response.status(Response.Status.NOT_FOUND)
                     .entity(e.getMessage())
                     .build();
@@ -113,18 +105,12 @@ public class PublicNewsResource {
     public Response reactToNews(
             @PathParam("id") Long id,
             ReactionRequest request,
-            @CookieParam("SESSION_ID") String sessionId
+            @HeaderParam("X-Session-Id") String sessionId
     ) {
         try {
-            if (sessionId == null || sessionId.trim().isEmpty()) {
-                sessionId = UUID.randomUUID().toString();
-            }
-
             publicNewsService.reactToNews(id, sessionId, request.getReaction());
 
-            return Response.ok("Reakcija sačuvana.")
-                    .cookie(new NewCookie("SESSION_ID", sessionId))
-                    .build();
+            return Response.ok("Reakcija sačuvana.").build();
 
         } catch (RuntimeException e) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -146,5 +132,21 @@ public class PublicNewsResource {
                     .entity(e.getMessage())
                     .build();
         }
+    }
+
+    @GET
+    @Path("/most-reacted")
+    public Response mostReacted() {
+        return Response.ok(publicNewsService.findMostReacted()).build();
+    }
+
+    @GET
+    @Path("/{id}/related")
+    public Response relatedNews(
+            @PathParam("id") Long id
+    ) {
+        return Response.ok(
+                publicNewsService.findRelatedNews(id)
+        ).build();
     }
 }

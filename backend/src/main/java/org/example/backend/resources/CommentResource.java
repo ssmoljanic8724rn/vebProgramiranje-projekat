@@ -47,18 +47,12 @@ public class CommentResource {
     public Response reactToComment(
             @PathParam("commentId") Long commentId,
             ReactionRequest request,
-            @CookieParam("SESSION_ID") String sessionId
+            @HeaderParam("X-Session-Id") String sessionId
     ) {
         try {
-            if (sessionId == null || sessionId.trim().isEmpty()) {
-                sessionId = UUID.randomUUID().toString();
-            }
-
             commentService.reactToComment(commentId, sessionId, request.getReaction());
 
-            return Response.ok("Reakcija sačuvana.")
-                    .cookie(new NewCookie("SESSION_ID", sessionId))
-                    .build();
+            return Response.ok("Reakcija sačuvana.").build();
 
         } catch (RuntimeException e) {
             return Response.status(Response.Status.BAD_REQUEST)

@@ -3,7 +3,7 @@ package org.example.backend;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.apache.commons.codec.digest.DigestUtils;
+import org.example.backend.filters.CorsFilter;
 import org.example.backend.repositories.*;
 import org.example.backend.repositories.impl.*;
 import org.example.backend.services.*;
@@ -55,6 +55,9 @@ public class HelloApplication extends ResourceConfig {
         provider.setMapper(mapper);
 
         register(provider);
+
+        System.out.println("Registered classes: " + getClasses());
+        System.out.println("Registered instances: " + getInstances());
 
         register(binder);
         packages("org.example.backend");

@@ -36,6 +36,10 @@ public class CommentService {
     public void reactToComment(Long commentId, String sessionId, String reaction) {
         Comment comment = commentRepository.findById(commentId);
 
+        if (sessionId == null || sessionId.trim().isEmpty()) {
+            throw new RuntimeException("Session ID nedostaje.");
+        }
+
         if (comment == null) {
             throw new RuntimeException("Komentar ne postoji.");
         }

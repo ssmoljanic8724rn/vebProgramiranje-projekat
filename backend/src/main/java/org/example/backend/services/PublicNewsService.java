@@ -21,28 +21,27 @@ public class PublicNewsService {
     }
 
     public News findById(Long id, String sessionId) {
-
         News news = publicNewsRepository.findById(id);
 
         if (news == null) {
             throw new RuntimeException("Vest ne postoji.");
         }
 
+        if (sessionId == null || sessionId.trim().isEmpty()) {
+            throw new RuntimeException("Session ID nedostaje.");
+        }
+
         boolean alreadyViewed =
                 publicNewsRepository.hasUserViewedNews(id, sessionId);
 
         if (!alreadyViewed) {
-
             publicNewsRepository.saveView(id, sessionId);
-
             publicNewsRepository.incrementVisitCount(id);
-
             news.setVisitCount(news.getVisitCount() + 1);
         }
 
         return news;
     }
-
     public List<News> findMostRead() {
         return publicNewsRepository.findMostRead();
     }
@@ -77,6 +76,10 @@ public class PublicNewsService {
     }
 
     public void reactToNews(Long newsId, String sessionId, String reaction) {
+        if (sessionId == null || sessionId.trim().isEmpty()) {
+            throw new RuntimeException("Session ID nedostaje.");
+        }
+
         News news = publicNewsRepository.findById(newsId);
 
         if (news == null) {
@@ -96,5 +99,14 @@ public class PublicNewsService {
         }
 
         return publicNewsRepository.getNewsReactionStats(newsId);
+    }
+
+    public List<News> findMostReacted() {
+        return publicNewsRepository.findMostReacted();
+    }
+
+    public List<News> findRelatedNews(Long newsId) {
+
+        return publicNewsRepository.findRelatedNews(newsId);
     }
 }

@@ -12,6 +12,7 @@ public class News {
     private Long authorId;
     private Long categoryId;
     private List<String> tags;
+    private String authorName;
 
     public News() {}
 
@@ -77,5 +78,13 @@ public class News {
 
     public void setTags(List<String> tags) {
         this.tags = tags;
+    }
+
+    public String getAuthorName() {
+        return authorName;
+    }
+
+    public void setAuthorName(String authorName) {
+        this.authorName = authorName;
     }
 }

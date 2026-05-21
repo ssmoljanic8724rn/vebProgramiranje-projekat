@@ -17,4 +17,6 @@ public interface PublicNewsRepository {
     List<News> findByTag(String tagName, int page, int pageSize);
     void reactToNews(Long newsId, String sessionId, String reaction);
     ReactionStats getNewsReactionStats(Long newsId);
+    List<News> findMostReacted();
+    List<News> findRelatedNews(Long newsId);
 }
